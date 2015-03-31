@@ -1,0 +1,31 @@
+---
+
+- name: create {{ standalone_service }} directory
+  file: path=/{{ standalone_service }} state=directory
+
+- name: create {{ standalone_service }} log directory
+  file: path=/{{ standalone_service }}-logs state=directory
+
+- name: copy {{ standalone_service }} properties
+  copy: src={{ item }} dest=/{{ standalone_service }}/
+  with_items:
+    - "{{ classpath_files }}"
+  notify:
+    - restart {{ standalone_service }}
+
+- name: copy {{ standalone_service }} standalone jar
+  copy: src={{ standalone_service }}-standalone.jar dest=/{{ standalone_service }}-standalone.jar
+  notify:
+    - restart {{ standalone_service }}
+
+- name: copy {{ standalone_service }} service
+  template: src={{ item.src }}.j2 dest={{ item.dest }} mode=744
+  with_items:
+    - { src: 'service_args', dest: '/etc/sysconfig/{{ standalone_service }}' }
+    - { src: 'service_exec', dest: '/usr/sbin/{{ standalone_service }}' }
+    - { src: 'service', dest: '/etc/init.d/{{ standalone_service }}'}
+  notify:
+    - restart {{ standalone_service }}
+
+- name: enable {{ standalone_service }} service
+  service: name={{ standalone_service }} enabled=true

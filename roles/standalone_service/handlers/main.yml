@@ -1,0 +1,4 @@
+---
+
+- name: restart {{ standalone_service }}
+  action: service name={{ standalone_service }} state=restarted
